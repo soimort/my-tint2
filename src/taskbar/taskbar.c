@@ -503,6 +503,161 @@ void sort_win_list(Window *windows, int count)
     sort_windows = NULL;
 }
 
+
+#define MAX_MONITOR_NUM 4
+#define MAX_WORKSPACE_NUM 4
+#define MAX_TASK_NUM 64
+
+typedef struct {
+    Window win;  // long unsigned
+    int desktop;
+    char *title;
+    char *application;
+} TintTask;
+
+int tint_session_monitor_num = 0;
+int tint_session_workspace_num[MAX_MONITOR_NUM] = {};
+int tint_session_task_num[MAX_MONITOR_NUM][MAX_WORKSPACE_NUM] = {};
+TintTask tint_session[MAX_MONITOR_NUM][MAX_WORKSPACE_NUM][MAX_TASK_NUM] = {};
+
+bool FLAG_STARTED = false;
+
+/* Updates the array tint_session with the current session information.
+   Returns true if any changes are ever made; otherwise returns false.
+ */
+bool tint_session_update()
+{
+    printf("*** tint_session_update\n"); ///
+    bool flag_changed = false;
+    for (int i = 0; i < num_panels; i++) {
+        Panel *panel = &panels[i];  // for each monitor
+        for (int j = 0; j < panel->num_desktops; j++) {
+            Taskbar *taskbar = &panel->taskbar[j];  // for each workspace
+
+            int k = 0;
+            GList *children = taskbar->area.children;
+            while (children && k < MAX_TASK_NUM) {
+                Task *data = (Task *)children->data;
+
+                if (tint_session[i][j][k].win != data->win) {
+                    tint_session[i][j][k].win = data->win;
+                    flag_changed = true;
+                }
+                if (tint_session[i][j][k].desktop != data->desktop) {
+                    tint_session[i][j][k].desktop = data->desktop;
+                    flag_changed = true;
+                }
+                if (tint_session[i][j][k].title != data->title) {
+                    // FIXME: copy the string
+                    ///tint_session[i][j][k].title = data->title;  // should we log the title at all?
+                    ///flag_changed = true;
+                }
+                if (tint_session[i][j][k].application != data->application) {
+                    // FIXME: copy the string
+                    ///tint_session[i][j][k].application = data->application;
+                    ///flag_changed = true;
+                }
+
+                k++;
+                children = children->next;
+            }
+            if (!children && k <= MAX_TASK_NUM)
+                tint_session_task_num[i][j] = k;
+            else
+                fprintf(stderr, "###### number of tasks exceeded MAX_TASK_NUM (%d)\n", MAX_TASK_NUM);
+        }
+        if (panel->num_desktops <= MAX_WORKSPACE_NUM)
+            tint_session_workspace_num[i] = panel->num_desktops;
+        else
+            fprintf(stderr, "###### number of workspaces (%d) exceeded MAX_WORKSPACE_NUM (%d)\n",
+                    panel->num_desktops, MAX_WORKSPACE_NUM);
+    }
+    if (num_panels <= MAX_MONITOR_NUM)
+        tint_session_monitor_num = num_panels;
+    else
+        fprintf(stderr, "###### number of monitors (%d) exceeded MAX_MONITOR_NUM (%d)\n",
+                num_panels, MAX_MONITOR_NUM);
+
+    return flag_changed;
+}
+
+/* Saves the array tint_session to file "$HOME/tint2.session".
+ */
+void tint_session_save()
+{
+    printf("*** tint_session_save\n"); ///
+    gchar *session_file = g_build_filename(g_get_home_dir(), "tint2.session", NULL);
+
+    GString *text = g_string_new((const gchar *)"");
+
+    for (int i = 0; i < tint_session_monitor_num; i++) {
+        for (int j = 0; j < tint_session_workspace_num[i]; j++) {
+            for (int k = 0; k < tint_session_task_num[i][j]; k++) {
+                g_string_append_printf(text, "session[%d][%d][%d].win=%lu\n", i, j, k,
+                                       tint_session[i][j][k].win);
+                g_string_append_printf(text, "session[%d][%d][%d].desktop=%d\n", i, j, k,
+                                       tint_session[i][j][k].desktop);
+                ///g_string_append_printf(text, "session[%d][%d][%d].title=%s\n", i, j, k,
+                ///                       tint_session[i][j][k].title);
+                ///g_string_append_printf(text, "session[%d][%d][%d].application=%s\n", i, j, k,
+                ///                       tint_session[i][j][k].application);
+                g_string_append_printf(text, "\n");
+            }
+        }
+    }
+
+    if (!g_file_set_contents(session_file, text->str, -1, NULL))
+        fprintf(stderr, "###### failed to save session file\n");
+
+    g_free(session_file);
+    g_string_free(text, TRUE);
+}
+
+/* Loads the array tint_session from file "$HOME/tint2.session".
+ */
+void tint_session_load()
+{
+    printf("*** tint_session_load\n"); ///
+    gchar *session_file = g_build_filename(g_get_home_dir(), "tint2.session", NULL);
+
+    GString *text = g_string_new((const gchar *)"");
+
+    if (!g_file_get_contents(session_file, &text->str, NULL, NULL))
+        fprintf(stderr, "###### failed to load session file\n");
+
+    gchar **lines = g_strsplit(text->str, "\n", -1);
+
+    gchar **p = lines;
+    while (*p) {
+        int i, j, k;
+        Window win;
+        int desktop;
+        char title[256], application[256];
+
+        sscanf((*p++), "session[%d][%d][%d].win=%lu", &i, &j, &k, &win);
+        sscanf((*p++), "session[%d][%d][%d].desktop=%d", &i, &j, &k, &desktop);
+        sscanf((*p++), "session[%d][%d][%d].title=%255[^\n]", &i, &j, &k, title);
+        sscanf((*p++), "session[%d][%d][%d].application=%255[^\n]", &i, &j, &k, application);
+        p++;
+
+        tint_session[i][j][k].win = win;
+        tint_session[i][j][k].desktop = desktop;
+        // TODO: should we just ignore title and application?
+
+        // FIXME: do not assume ascending order in the file
+        tint_session_monitor_num = i + 1;
+        tint_session_workspace_num[i] = j + 1;
+        tint_session_task_num[i][j] = k + 1;
+
+        fprintf(stderr, "###### loaded session[%d][%d][%d], win = %lu, desktop = %d, title = %s, application = %s\n",
+                i, j, k, win, desktop, title, application);
+    }
+
+    g_free(session_file);
+    g_string_free(text, TRUE);
+    g_strfreev(lines);
+}
+
 void taskbar_refresh_tasklist()
 {
     if (!taskbar_enabled)
@@ -518,6 +673,56 @@ void taskbar_refresh_tasklist()
     }
     if (!win)
         return;
+
+    // among num_results windows, count the number of windows already added to tint2
+    int num_added = 0;
+    for (int i = 0; i < num_results; i++)
+        if (get_task(sorted[i])) num_added++;
+    // zero means tint2 has just (re)started
+    if (num_added == 0) {
+        fprintf(stderr, "###### adding %d windows\n", num_results); ///
+
+        ////
+
+        // restore window order in the array sorted according to tint_session
+        int m = 0;
+        for (int i = 0; i < tint_session_monitor_num; i++) {
+            for (int j = 0; j < tint_session_workspace_num[i]; j++) {
+                for (int k = 0; k < tint_session_task_num[i][j]; k++) {
+                    bool flag_found = false;
+                    for (int n = 0; n < num_results; n++)
+                        if (win[n] == tint_session[i][j][k].win)
+                            flag_found = true;
+                    if (flag_found) {
+                        if (m < num_results)
+                            sorted[m++] = tint_session[i][j][k].win;
+                        else {
+                            // this should not happen
+                            fprintf(stderr, "###### failed to add win %lu\n", tint_session[i][j][k].win);
+                            fprintf(stderr, "###### more recorded windows than existing windows (%d)\n",
+                                    num_results);
+                        }
+                    } else {
+                        // this can happen
+                        fprintf(stderr, "###### win %lu recorded but not existing\n",
+                                tint_session[i][j][k].win);
+                    }
+                }
+            }
+        }
+        if (m < num_results) {
+            fprintf(stderr, "###### %d recorded windows, but %d existing windows\n", m, num_results);
+            // add the rest of existing windows
+            for (int n = 0; n < num_results; n++) {
+                bool flag_found = false;
+                for (int l = 0; l < m; l++)
+                    if (sorted[l] == win[n])
+                        flag_found = true;
+                if (!flag_found) sorted[m++] = win[n];
+            }
+            fprintf(stderr, "###### %d windows added in total\n", m);
+        }
+    }
 
     GList *win_list = g_hash_table_get_keys(win_to_task);
     for (GList *it = win_list; it; it = it->next) {
@@ -537,6 +742,10 @@ void taskbar_refresh_tasklist()
 
     XFree(win);
     free(sorted);
+
+    // update tint_session, and save it to file "$HOME/tint2.session" if any changes are made
+    if (tint_session_update())
+        tint_session_save();
 }
 
 int taskbar_compute_desired_size(void *obj)
