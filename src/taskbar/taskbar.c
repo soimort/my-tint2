@@ -509,7 +509,7 @@ void sort_win_list(Window *windows, int count)
 #define MAX_TASK_NUM 64
 
 typedef struct {
-    Window win;  // long unsigned
+    Window win;  // long unsigned (32-bit)
     int desktop;
     char *title;
     char *application;
@@ -527,7 +527,9 @@ bool FLAG_STARTED = false;
  */
 bool tint_session_update()
 {
-    printf("*** tint_session_update\n"); ///
+    time_t now = time(NULL);
+    char *now_ctime = ctime(&now);
+    printf("[my-tint2] (%s) tint_session_update\n", now_ctime); ///
     bool flag_changed = false;
     for (int i = 0; i < num_panels; i++) {
         Panel *panel = &panels[i];  // for each monitor
@@ -585,7 +587,9 @@ bool tint_session_update()
  */
 void tint_session_save()
 {
-    printf("*** tint_session_save\n"); ///
+    time_t now = time(NULL);
+    char *now_ctime = ctime(&now);
+    printf("[my-tint2] (%s) tint_session_save\n", now_ctime); ///
     gchar *session_file = g_build_filename(g_get_home_dir(), "tint2.session", NULL);
 
     GString *text = g_string_new((const gchar *)"");
@@ -617,7 +621,9 @@ void tint_session_save()
  */
 void tint_session_load()
 {
-    printf("*** tint_session_load\n"); ///
+    time_t now = time(NULL);
+    char *now_ctime = ctime(&now);
+    printf("[my-tint2] (%s) tint_session_load\n", now_ctime); ///
     gchar *session_file = g_build_filename(g_get_home_dir(), "tint2.session", NULL);
 
     GString *text = g_string_new((const gchar *)"");
