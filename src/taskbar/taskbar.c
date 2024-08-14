@@ -597,7 +597,7 @@ void tint_session_save()
     for (int i = 0; i < tint_session_monitor_num; i++) {
         for (int j = 0; j < tint_session_workspace_num[i]; j++) {
             for (int k = 0; k < tint_session_task_num[i][j]; k++) {
-                g_string_append_printf(text, "session[%d][%d][%d].win=%lx\n", i, j, k,
+                g_string_append_printf(text, "session[%d][%d][%d].win=0x%lx\n", i, j, k,
                                        tint_session[i][j][k].win);
                 g_string_append_printf(text, "session[%d][%d][%d].desktop=%d\n", i, j, k,
                                        tint_session[i][j][k].desktop);
@@ -640,7 +640,7 @@ void tint_session_load()
         int desktop;
         char title[256], application[256];
 
-        sscanf((*p++), "session[%d][%d][%d].win=%lx", &i, &j, &k, &win);
+        sscanf((*p++), "session[%d][%d][%d].win=0x%lx", &i, &j, &k, &win);
         sscanf((*p++), "session[%d][%d][%d].desktop=%d", &i, &j, &k, &desktop);
         //sscanf((*p++), "session[%d][%d][%d].title=%255[^\n]", &i, &j, &k, title);
         //sscanf((*p++), "session[%d][%d][%d].application=%255[^\n]", &i, &j, &k, application);
@@ -655,7 +655,7 @@ void tint_session_load()
         tint_session_workspace_num[i] = j + 1;
         tint_session_task_num[i][j] = k + 1;
 
-        fprintf(stderr, "###### loaded session[%d][%d][%d], win = %lu, desktop = %d, title = %s, application = %s\n",
+        fprintf(stderr, "###### loaded session[%d][%d][%d], win = 0x%lx, desktop = %d, title = %s, application = %s\n",
                 i, j, k, win, desktop, title, application);
     }
 
@@ -704,13 +704,13 @@ void taskbar_refresh_tasklist()
                             sorted[m++] = tint_session[i][j][k].win;
                         else {
                             // this should not happen
-                            fprintf(stderr, "###### failed to add win %lu\n", tint_session[i][j][k].win);
+                            fprintf(stderr, "###### failed to add win 0x%lx\n", tint_session[i][j][k].win);
                             fprintf(stderr, "###### more recorded windows than existing windows (%d)\n",
                                     num_results);
                         }
                     } else {
                         // this can happen
-                        fprintf(stderr, "###### win %lu recorded but not existing\n",
+                        fprintf(stderr, "###### win 0x%lx recorded but not existing\n",
                                 tint_session[i][j][k].win);
                     }
                 }
