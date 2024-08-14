@@ -597,7 +597,7 @@ void tint_session_save()
     for (int i = 0; i < tint_session_monitor_num; i++) {
         for (int j = 0; j < tint_session_workspace_num[i]; j++) {
             for (int k = 0; k < tint_session_task_num[i][j]; k++) {
-                g_string_append_printf(text, "session[%d][%d][%d].win=%lu\n", i, j, k,
+                g_string_append_printf(text, "session[%d][%d][%d].win=%lx\n", i, j, k,
                                        tint_session[i][j][k].win);
                 g_string_append_printf(text, "session[%d][%d][%d].desktop=%d\n", i, j, k,
                                        tint_session[i][j][k].desktop);
@@ -640,10 +640,10 @@ void tint_session_load()
         int desktop;
         char title[256], application[256];
 
-        sscanf((*p++), "session[%d][%d][%d].win=%lu", &i, &j, &k, &win);
+        sscanf((*p++), "session[%d][%d][%d].win=%lx", &i, &j, &k, &win);
         sscanf((*p++), "session[%d][%d][%d].desktop=%d", &i, &j, &k, &desktop);
-        sscanf((*p++), "session[%d][%d][%d].title=%255[^\n]", &i, &j, &k, title);
-        sscanf((*p++), "session[%d][%d][%d].application=%255[^\n]", &i, &j, &k, application);
+        //sscanf((*p++), "session[%d][%d][%d].title=%255[^\n]", &i, &j, &k, title);
+        //sscanf((*p++), "session[%d][%d][%d].application=%255[^\n]", &i, &j, &k, application);
         p++;
 
         tint_session[i][j][k].win = win;
