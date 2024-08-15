@@ -632,7 +632,7 @@ void tint_session_load()
     GString *text = g_string_new((const gchar *)"");
 
     if (!g_file_get_contents(session_file, &text->str, NULL, NULL))
-        fprintf(stderr, "###### failed to load session file\n");
+        fprintf(stderr, "[my-tint2] \t failed to load session file\n");
 
     gchar **lines = g_strsplit(text->str, "\n", -1);
 
@@ -641,7 +641,7 @@ void tint_session_load()
         int i, j, k;
         Window win;
         int desktop;
-        char title[256], application[256];
+        //char title[256], application[256];
 
         sscanf((*p++), "session[%d][%d][%d].win=0x%lx", &i, &j, &k, &win);
         sscanf((*p++), "session[%d][%d][%d].desktop=%d", &i, &j, &k, &desktop);
@@ -658,8 +658,8 @@ void tint_session_load()
         tint_session_workspace_num[i] = j + 1;
         tint_session_task_num[i][j] = k + 1;
 
-        fprintf(stderr, "###### loaded session[%d][%d][%d], win = 0x%lx, desktop = %d, title = %s, application = %s\n",
-                i, j, k, win, desktop, title, application);
+        fprintf(stderr, "[my-tint2] \t loaded session[%d][%d][%d], win=0x%lx, desktop=%d\n",
+                i, j, k, win, desktop);
     }
 
     g_free(session_file);
@@ -677,7 +677,7 @@ void taskbar_refresh_tasklist()
     Window *sorted = (Window *)calloc(num_results, sizeof(Window));
     memcpy(sorted, win, num_results * sizeof(Window));
     if (taskbar_task_orderings) {
-        printf("[my-tint2] \t taskbar_task_orderings\n"); ///
+        printf("[my-tint2] \t sorting using taskbar_task_orderings\n"); ///
         sort_win_list(sorted, num_results);
         taskbar_clear_orderings();
     }
@@ -697,7 +697,7 @@ void taskbar_refresh_tasklist()
 
         printf("[my-tint2] \t adding %d windows\n", num_results); ///
 
-        ////
+        tint_session_load();
 
         // restore window order in the array sorted according to tint_session
         int m = 0;
