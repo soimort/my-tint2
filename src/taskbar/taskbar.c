@@ -665,6 +665,7 @@ void tint_session_load()
     g_free(session_file);
     g_string_free(text, TRUE);
     g_strfreev(lines);
+    fprintf(stderr, "[my-tint2] \t finished loading session file\n");
 }
 
 void taskbar_refresh_tasklist()
