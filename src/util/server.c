@@ -122,6 +122,9 @@ void server_init_atoms()
     server.atom.XdndActionCopy = XInternAtom(server.display, "XdndActionCopy", False);
     server.atom.XdndFinished = XInternAtom(server.display, "XdndFinished", False);
     server.atom.TARGETS = XInternAtom(server.display, "TARGETS", False);
+
+    // tint2 atoms
+    server.atom.TINT2_REFRESH_EXECP = XInternAtom(server.display, "_TINT2_REFRESH_EXECP", False);
 }
 
 const char *GetAtomName(Display *disp, Atom a)

@@ -314,6 +314,7 @@ panel_size = 94% 30
 <h3 id="executor">Executor<a name="executor" href="#executor" class="md2man-permalink" title="permalink"></a></h3>
 <ul>
 <li><p><code>execp = new</code> : Begins the configuration of a new executor plugin. Multiple such plugins are supported; just use multiple <code>E</code>s in <code>panel_items</code>. <em>(since 0.12.4)</em></p></li>
+<li><p><code>execp_name = text</code> : A name that can be used with <code>tint2-send refresh-execp</code> to re-execute the command.</p></li>
 <li><p><code>execp_command = text</code> : Command to execute. <em>(since 0.12.4)</em></p></li>
 <li><p><code>execp_interval = integer</code> : The command is executed again after <code>execp_interval</code> seconds from the moment it exits. If zero, the command is executed only once. <em>(since 0.12.4)</em></p></li>
 <li><p><code>execp_continuous = integer</code> : If non-zero, the last <code>execp_continuous</code> lines from the output of the command are displayed, every <code>execp_continuous</code> lines; this is useful for showing the output of commands that run indefinitely, such as <code>ping 127.0.0.1</code>. If zero, the output of the command is displayed after it finishes executing. <em>(since 0.12.4)</em></p></li>

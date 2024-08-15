@@ -683,6 +683,14 @@ void add_entry(char *key, char *value)
     /* Execp */
     else if (strcmp(key, "execp") == 0) {
         panel_config.execp_list = g_list_append(panel_config.execp_list, create_execp());
+    } else if (strcmp(key, "execp_name") == 0) {
+        Execp *execp = get_or_create_last_execp();
+        execp->backend->name[0] = 0;
+        if (strlen(value) > sizeof(execp->backend->name) - 1)
+            fprintf(stderr, RED "tint2: execp_name cannot be more than %ld bytes: '%s'" RESET "\n",
+                    sizeof(execp->backend->name) - 1, value);
+        else if (strlen(value) > 0)
+            snprintf(execp->backend->name, sizeof(execp->backend->name), value);
     } else if (strcmp(key, "execp_command") == 0) {
         Execp *execp = get_or_create_last_execp();
         free_and_null(execp->backend->command);

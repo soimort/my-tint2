@@ -32,7 +32,6 @@
 #include <X11/extensions/Xdamage.h>
 #include <Imlib2.h>
 #include <signal.h>
-#include <unistd.h>
 #include <sys/types.h>
 #include <pwd.h>
 #include <time.h>
@@ -545,6 +544,17 @@ void handle_x_event(XEvent *e)
             handle_dnd_position(&e->xclient);
         } else if (e->xclient.message_type == server.atom.XdndDrop) {
             handle_dnd_drop(&e->xclient);
+        } else if (e->xclient.message_type == server.atom.TINT2_REFRESH_EXECP &&
+            e->xclient.format == 8) {
+            char name[sizeof(e->xclient.data.b) + 1] = {};
+            memcpy(name, e->xclient.data.b, sizeof(e->xclient.data.b));
+            for (GList *l = panel_config.execp_list; l; l = l->next) {
+                Execp *execp = (Execp *)l->data;
+                if (strncmp(name, execp->backend->name, sizeof(execp->backend->name) - 1) == 0) {
+                    fprintf(stderr, "tint2: Refreshing executor: %s\n", name);
+                    execp_force_update(execp);
+                }
+            }
         }
         break;
     }

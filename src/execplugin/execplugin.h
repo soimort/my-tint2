@@ -20,6 +20,7 @@ extern bool debug_executors;
 
 typedef struct ExecpBackend {
     // Config:
+    char name[21];
     // Command to execute at a specified interval
     char *command;
     // Interval in seconds
@@ -153,5 +154,7 @@ void execp_update_post_read(Execp *execp);
 void execp_default_font_changed();
 
 void handle_execp_events();
+
+void execp_force_update(Execp *execp);
 
 #endif // EXECPLUGIN_H

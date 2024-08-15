@@ -169,31 +169,40 @@ int get_window_desktop(Window win)
     return best_match;
 }
 
+#define swap(a, b) do { __typeof__(a) _tmp = (a); (a) = (b); (b) = _tmp; } while(0)
+
+int get_interval_overlap(int a1, int a2, int b1, int b2)
+{
+    if (a1 > b1) {
+        swap(a1, b1);
+        swap(a2, b2);
+    }
+    if (b1 <= a2)
+        return a2 - b1;
+    return 0;
+}
+
 int get_window_monitor(Window win)
 {
     int x, y, w, h;
     get_window_coordinates(win, &x, &y, &w, &h);
 
-    int best_match = -1;
-    int match_right = 0;
-    int match_bottom = 0;
-    // There is an ambiguity when a window is right on the edge between screens.
-    // In that case, prefer the monitor which is on the right and bottom of the window's top-left corner.
+    int best_match = 0;
+    int best_area = -1;
     for (int i = 0; i < server.num_monitors; i++) {
-        if (x >= server.monitors[i].x && x <= (server.monitors[i].x + server.monitors[i].width) &&
-            y >= server.monitors[i].y && y <= (server.monitors[i].y + server.monitors[i].height)) {
-            int current_right = x < (server.monitors[i].x + server.monitors[i].width);
-            int current_bottom = y < (server.monitors[i].y + server.monitors[i].height);
-            if (best_match < 0 || (!match_right && current_right) || (!match_bottom && current_bottom)) {
-                best_match = i;
-            }
+        int commonx = get_interval_overlap(x, x + w, server.monitors[i].x, server.monitors[i].x + server.monitors[i].width);
+        int commony = get_interval_overlap(y, y + h, server.monitors[i].y, server.monitors[i].y + server.monitors[i].height);
+        int area = commonx * commony;
+        if (0)
+            printf("Monitor %d (%dx%d+%dx%d): win (%dx%d+%dx%d) area %dx%d=%d\n",
+                   i, server.monitors[i].x, server.monitors[i].y, server.monitors[i].width, server.monitors[i].height,
+                   x, y, w, h,
+                   commonx, commony, area);
+        if (area > best_area) {
+            best_area = area;
+            best_match = i;
         }
     }
-
-    if (best_match < 0)
-        best_match = 0;
-    // fprintf(stderr, "tint2: desktop %d, window %lx %s : monitor %d, (%d, %d)\n", 1 + get_current_desktop(), win,
-    // get_task(win) ? get_task(win)->title : "??", best_match+1, x, y);
     return best_match;
 }
 

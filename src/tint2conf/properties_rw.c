@@ -857,6 +857,7 @@ void config_write_execp(FILE *fp)
         Executor *executor = &g_array_index(executors, Executor, i);
 
         fprintf(fp, "execp = new\n");
+        fprintf(fp, "execp_name = %s\n", gtk_entry_get_text(GTK_ENTRY(executor->execp_name)));
         fprintf(fp, "execp_command = %s\n", gtk_entry_get_text(GTK_ENTRY(executor->execp_command)));
         fprintf(fp, "execp_interval = %d\n", (int)gtk_spin_button_get_value(GTK_SPIN_BUTTON(executor->execp_interval)));
         fprintf(fp,
@@ -1962,6 +1963,8 @@ void add_entry(char *key, char *value)
     /* Executor */
     else if (strcmp(key, "execp") == 0) {
         execp_create_new();
+    } else if (strcmp(key, "execp_name") == 0) {
+        gtk_entry_set_text(GTK_ENTRY(execp_get_last()->execp_name), value);
     } else if (strcmp(key, "execp_command") == 0) {
         gtk_entry_set_text(GTK_ENTRY(execp_get_last()->execp_command), value);
     } else if (strcmp(key, "execp_interval") == 0) {

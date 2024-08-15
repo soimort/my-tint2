@@ -1,4 +1,4 @@
-# TINT2 1 "2021-05-29" 17.0.1
+# TINT2 1 "2021-12-04" 17.0.2
 
 ## NAME
 tint2 - lightweight panel/taskbar
@@ -592,6 +592,8 @@ The action semantics:
 ### Executor
 
   * `execp = new` : Begins the configuration of a new executor plugin. Multiple such plugins are supported; just use multiple `E`s in `panel_items`. *(since 0.12.4)*
+
+  * `execp_name = text` : A name that can be used with `tint2-send refresh-execp` to re-execute the command.
 
   * `execp_command = text` : Command to execute. *(since 0.12.4)*
 

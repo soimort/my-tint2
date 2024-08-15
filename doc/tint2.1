@@ -1,4 +1,4 @@
-.TH TINT2 1 "2021\-05\-29" 17.0.1
+.TH TINT2 1 "2021\-12\-04" 17.0.2
 .SH NAME
 .PP
 tint2 \- lightweight panel/taskbar
@@ -719,6 +719,8 @@ To hide the clock, comment \fB\fCtime1_format\fR and \fB\fCtime2_format\fR\&.
 .RS
 .IP \(bu 2
 \fB\fCexecp = new\fR : Begins the configuration of a new executor plugin. Multiple such plugins are supported; just use multiple \fB\fCE\fRs in \fB\fCpanel_items\fR\&. \fI(since 0.12.4)\fP
+.IP \(bu 2
+\fB\fCexecp_name = text\fR : A name that can be used with \fB\fCtint2\-send refresh\-execp\fR to re\-execute the command.
 .IP \(bu 2
 \fB\fCexecp_command = text\fR : Command to execute. \fI(since 0.12.4)\fP
 .IP \(bu 2

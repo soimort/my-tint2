@@ -4271,6 +4271,23 @@ void create_execp(GtkWidget *notebook, int i)
     gtk_table_set_col_spacings(GTK_TABLE(table), COL_SPACING);
     row = 0, col = 2;
 
+    label = gtk_label_new(_("Name"));
+    gtk_misc_set_alignment(GTK_MISC(label), 0, 0);
+    gtk_widget_show(label);
+    gtk_table_attach(GTK_TABLE(table), label, col, col + 1, row, row + 1, GTK_FILL, 0, 0, 0);
+    col++;
+
+    executor->execp_name = gtk_entry_new();
+    gtk_widget_show(executor->execp_name);
+    gtk_entry_set_width_chars(GTK_ENTRY(executor->execp_name), 20);
+    gtk_entry_set_max_length(GTK_ENTRY(executor->execp_name), 20);
+    gtk_table_attach(GTK_TABLE(table), executor->execp_name, col, col + 1, row, row + 1, GTK_FILL, 0, 0, 0);
+    col++;
+    gtk_widget_set_tooltip_text(executor->execp_name,
+                                _("Specifies a name that can be used with `tint2-send refresh-execp` to re-execute "
+                                  "the command."));
+
+    row++, col = 2;
     label = gtk_label_new(_("Command"));
     gtk_misc_set_alignment(GTK_MISC(label), 0, 0);
     gtk_widget_show(label);

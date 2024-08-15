@@ -45,8 +45,8 @@ int is_tint2(Window window)
     XWindowAttributes attr = {};
     if (!XGetWindowAttributes(display, window, &attr))
         return 0;
-    if (attr.map_state != IsViewable)
-        return 0;
+    // if (attr.map_state != IsViewable)
+    //     return 0;
 
     char *wm_class = get_property(window, XA_STRING, "WM_NAME");
     if (!wm_class) {
@@ -60,11 +60,10 @@ int is_tint2(Window window)
     return class_match;
 }
 
-void handle_tint2_window(Window window, void *arg)
+void handle_tint2_window(Window window, char *action, char **args)
 {
     if (!is_tint2(window))
         return;
-    char *action = (char *)arg;
     if (strcmp(action, "show") == 0) {
         fprintf(stderr, "Showing tint2 window: %lx\n", window);
         XEvent event = {};
@@ -85,16 +84,40 @@ void handle_tint2_window(Window window, void *arg)
         event.xcrossing.same_screen = True;
         XSendEvent(display, window, False, 0, &event);
         XFlush(display);
+    } else if (strcmp(action, "refresh-execp") == 0) {
+        XEvent event = {};
+        char *name = args[0];
+        if (!name) {
+            fprintf(stderr, "Error: missing execp name\n");
+            return;
+        }
+        if (!name[0]) {
+            fprintf(stderr, "Error: empty execp name\n");
+            return;
+        }
+        if (strlen(name) > sizeof(event.xclient.data.b)) {
+            fprintf(stderr, "Error: execp name bigger than %ld bytes\n", sizeof(event.xclient.data.b));
+            return;
+        }
+        fprintf(stderr, "Refreshing execp '%s' for window: %lx\n", name, window);
+        event.xclient.type = ClientMessage;
+        event.xclient.window = window;
+        event.xclient.send_event = True;
+        event.xclient.message_type = XInternAtom(display, "_TINT2_REFRESH_EXECP", False);
+        event.xclient.format = 8;
+        strncpy(event.xclient.data.b, name, sizeof(event.xclient.data.b));
+        XSendEvent(display, window, False, 0, &event);
+        XFlush(display);
     } else {
         fprintf(stderr, "Error: unknown action %s\n", action);
     }
 }
 
-typedef void window_callback_t(Window window, void *arg);
+typedef void window_callback_t(Window window, char *action, char **args);
 
-void walk_windows(Window node, window_callback_t *callback, void *arg)
+void walk_windows(Window node, window_callback_t *callback, char *action, char **args)
 {
-    callback(node, arg);
+    callback(node, action, args);
     Window root = 0;
     Window parent = 0;
     Window *children = 0;
@@ -104,7 +127,7 @@ void walk_windows(Window node, window_callback_t *callback, void *arg)
         return;
     }
     for (unsigned int i = 0; i < nchildren; i++) {
-        walk_windows(children[i], callback, arg);
+        walk_windows(children[i], callback, action, args);
     }
 }
 
@@ -118,11 +141,12 @@ int main(int argc, char **argv)
 
     argc--, argv++;
     if (!argc) {
-        fprintf(stderr, "Usage: tint2-show [show|hide]\n");
+        fprintf(stderr, "Usage: tint2-send [show|hide|refresh-execp]\n");
         exit(1);
     }
     char *action = argv[0];
-    walk_windows(DefaultRootWindow(display), handle_tint2_window, action);
+    char **args = argv + 1;
+    walk_windows(DefaultRootWindow(display), handle_tint2_window, action, args);
 
     return 0;
 }
