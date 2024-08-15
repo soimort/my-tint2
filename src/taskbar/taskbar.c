@@ -520,17 +520,18 @@ int tint_session_workspace_num[MAX_MONITOR_NUM] = {};
 int tint_session_task_num[MAX_MONITOR_NUM][MAX_WORKSPACE_NUM] = {};
 TintTask tint_session[MAX_MONITOR_NUM][MAX_WORKSPACE_NUM][MAX_TASK_NUM] = {};
 
-bool FLAG_STARTED = false;
+///bool FLAG_STARTED = false;
 
 /* Updates the array tint_session with the current session information.
    Returns true if any changes are ever made; otherwise returns false.
  */
 bool tint_session_update()
 {
-    time_t now = time(NULL);
-    char *now_ctime = ctime(&now);
-    now_ctime[strlen(now_ctime) - 1] = '\0';
-    printf("[my-tint2] (%s) tint_session_update\n", now_ctime); ///
+    ///time_t now = time(NULL);
+    ///char *now_ctime = ctime(&now);
+    ///now_ctime[strlen(now_ctime) - 1] = '\0';
+    ///printf("[my-tint2] (%s) tint_session_update\n", now_ctime);  // log
+
     bool flag_changed = false;
     for (int i = 0; i < num_panels; i++) {
         Panel *panel = &panels[i];  // for each monitor
@@ -550,36 +551,45 @@ bool tint_session_update()
                     tint_session[i][j][k].desktop = data->desktop;
                     flag_changed = true;
                 }
+                /*
                 if (tint_session[i][j][k].title != data->title) {
                     // FIXME: copy the string
-                    ///tint_session[i][j][k].title = data->title;  // should we log the title at all?
-                    ///flag_changed = true;
+                    tint_session[i][j][k].title = data->title;  // should we log the title at all?
+                    flag_changed = true;
                 }
                 if (tint_session[i][j][k].application != data->application) {
                     // FIXME: copy the string
-                    ///tint_session[i][j][k].application = data->application;
-                    ///flag_changed = true;
+                    tint_session[i][j][k].application = data->application;
+                    flag_changed = true;
                 }
+                */
 
                 k++;
                 children = children->next;
             }
             if (!children && k <= MAX_TASK_NUM)
                 tint_session_task_num[i][j] = k;
-            else
-                fprintf(stderr, "###### number of tasks exceeded MAX_TASK_NUM (%d)\n", MAX_TASK_NUM);
+            else {
+                tint_session_task_num[i][j] = MAX_TASK_NUM;
+                fprintf(stderr, "[my-tint2] [WARNING] number of tasks (%d) exceeded MAX_TASK_NUM (%d)\n",
+                        k, MAX_TASK_NUM);
+            }
         }
         if (panel->num_desktops <= MAX_WORKSPACE_NUM)
             tint_session_workspace_num[i] = panel->num_desktops;
-        else
-            fprintf(stderr, "###### number of workspaces (%d) exceeded MAX_WORKSPACE_NUM (%d)\n",
+        else {
+            tint_session_workspace_num[i] = MAX_WORKSPACE_NUM;
+            fprintf(stderr, "[my-tint2] [WARNING] number of workspaces (%d) exceeded MAX_WORKSPACE_NUM (%d)\n",
                     panel->num_desktops, MAX_WORKSPACE_NUM);
+        }
     }
     if (num_panels <= MAX_MONITOR_NUM)
         tint_session_monitor_num = num_panels;
-    else
-        fprintf(stderr, "###### number of monitors (%d) exceeded MAX_MONITOR_NUM (%d)\n",
+    else {
+        tint_session_monitor_num = MAX_MONITOR_NUM;
+        fprintf(stderr, "[my-tint2] [WARNING] number of monitors (%d) exceeded MAX_MONITOR_NUM (%d)\n",
                 num_panels, MAX_MONITOR_NUM);
+    }
 
     return flag_changed;
 }
@@ -591,7 +601,8 @@ void tint_session_save()
     time_t now = time(NULL);
     char *now_ctime = ctime(&now);
     now_ctime[strlen(now_ctime) - 1] = '\0';
-    printf("[my-tint2] (%s) tint_session_save\n", now_ctime); ///
+    printf("[my-tint2] (%s) tint_session_save\n", now_ctime);  // log
+
     gchar *session_file = g_build_filename(g_get_home_dir(), "tint2.session", NULL);
 
     GString *text = g_string_new((const gchar *)"");
@@ -613,7 +624,7 @@ void tint_session_save()
     }
 
     if (!g_file_set_contents(session_file, text->str, -1, NULL))
-        fprintf(stderr, "###### failed to save session file\n");
+        fprintf(stderr, "[my-tint2] [ERROR] failed to save session file\n");
 
     g_free(session_file);
     g_string_free(text, TRUE);
@@ -626,13 +637,14 @@ void tint_session_load()
     time_t now = time(NULL);
     char *now_ctime = ctime(&now);
     now_ctime[strlen(now_ctime) - 1] = '\0';
-    printf("[my-tint2] (%s) tint_session_load\n", now_ctime); ///
+    printf("[my-tint2] (%s) tint_session_load\n", now_ctime);  // log
+
     gchar *session_file = g_build_filename(g_get_home_dir(), "tint2.session", NULL);
 
     GString *text = g_string_new((const gchar *)"");
 
     if (!g_file_get_contents(session_file, &text->str, NULL, NULL))
-        fprintf(stderr, "[my-tint2] \t failed to load session file\n");
+        fprintf(stderr, "[my-tint2] [ERROR] failed to load session file\n");
 
     gchar **lines = g_strsplit(text->str, "\n", -1);
 
@@ -641,34 +653,33 @@ void tint_session_load()
         int i, j, k;
         Window win;
         int desktop;
-        //char title[256], application[256];
+        ///char title[256], application[256];
 
         sscanf((*p++), "session[%d][%d][%d].win=0x%lx", &i, &j, &k, &win);
         if (!(*p)) break;
         sscanf((*p++), "session[%d][%d][%d].desktop=%d", &i, &j, &k, &desktop);
         if (!(*p)) break;
-        //sscanf((*p++), "session[%d][%d][%d].title=%255[^\n]", &i, &j, &k, title);
-        //sscanf((*p++), "session[%d][%d][%d].application=%255[^\n]", &i, &j, &k, application);
+        ///sscanf((*p++), "session[%d][%d][%d].title=%255[^\n]", &i, &j, &k, title);
+        ///sscanf((*p++), "session[%d][%d][%d].application=%255[^\n]", &i, &j, &k, application);
         p++;
 
         tint_session[i][j][k].win = win;
         tint_session[i][j][k].desktop = desktop;
-        // TODO: should we just ignore title and application?
+        // TODO: should we just omit title and application?
 
         // FIXME: do not assume ascending order in the file
         tint_session_monitor_num = i + 1;
         tint_session_workspace_num[i] = j + 1;
         tint_session_task_num[i][j] = k + 1;
 
-        fprintf(stderr, "[my-tint2] \t loaded session[%d][%d][%d], win=0x%lx, desktop=%d\n",
-                i, j, k, win, desktop);
+        printf("[my-tint2] \t loaded session[%d][%d][%d]: win=0x%lx, desktop=%d\n",
+               i, j, k, win, desktop);
     }
-    fprintf(stderr, "[my-tint2] \t finished loading session\n");
+    printf("[my-tint2] \t finished loading session file\n");
 
     g_free(session_file);
     g_string_free(text, TRUE);
     g_strfreev(lines);
-    fprintf(stderr, "[my-tint2] \t finished loading session file\n");
 }
 
 void taskbar_refresh_tasklist()
@@ -681,7 +692,7 @@ void taskbar_refresh_tasklist()
     Window *sorted = (Window *)calloc(num_results, sizeof(Window));
     memcpy(sorted, win, num_results * sizeof(Window));
     if (taskbar_task_orderings) {
-        printf("[my-tint2] \t sorting using taskbar_task_orderings\n"); ///
+        printf("[my-tint2] \t sorting due to taskbar_task_orderings\n");  // log
         sort_win_list(sorted, num_results);
         taskbar_clear_orderings();
     }
@@ -697,9 +708,9 @@ void taskbar_refresh_tasklist()
         time_t now = time(NULL);
         char *now_ctime = ctime(&now);
         now_ctime[strlen(now_ctime) - 1] = '\0';
-        printf("[my-tint2] (%s) STARTED\n", now_ctime); ///
+        printf("[my-tint2] (%s) STARTED\n", now_ctime);  // log
 
-        printf("[my-tint2] \t adding %d windows\n", num_results); ///
+        printf("[my-tint2] \t adding %d windows\n", num_results);  // log
 
         tint_session_load();
 
@@ -717,21 +728,22 @@ void taskbar_refresh_tasklist()
                             sorted[m++] = tint_session[i][j][k].win;
                         else {
                             // this should not happen
-                            fprintf(stderr, "[my-tint2] \t failed to add win 0x%lx\n",
+                            fprintf(stderr, "[my-tint2] [WTF] failed to add win 0x%lx\n",
                                     tint_session[i][j][k].win);
-                            fprintf(stderr, "[my-tint2] \t more recorded windows than existing windows (%d)\n",
+                            fprintf(stderr, "[my-tint2] [WTF] more recorded windows than existing windows (%d)\n",
                                     num_results);
                         }
                     } else {
                         // this can happen
-                        fprintf(stderr, "[my-tint2] \t win 0x%lx recorded but not existing\n",
+                        fprintf(stderr, "[my-tint2] [WARNING] win 0x%lx recorded but not existing\n",
                                 tint_session[i][j][k].win);
                     }
                 }
             }
         }
         if (m < num_results) {
-            fprintf(stderr, "[my-tint2] \t %d recorded windows, but %d existing windows\n", m, num_results);
+            fprintf(stderr, "[my-tint2] [WARNING] %d recorded windows, but %d existing windows\n",
+                    m, num_results);
             // add the rest of existing windows
             for (int n = 0; n < num_results; n++) {
                 bool flag_found = false;
