@@ -1,3 +1,11 @@
+# my-tint2
+
+This is just like the original [tint2](https://gitlab.com/o9000/tint2) taskbar, except that it *preserves the order of open windows (tasks)* in case of an WM (window manager) restart. Convenient when using / experimenting with unstable WMs that frequently crash or have memory leak issues triggering WM restarts.
+
+Note this won't survive an X11 session restart, though.
+
+---
+
 # Latest stable release: 17.0.2
 
 The final release of tint2 is 17.0.2.
