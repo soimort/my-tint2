@@ -647,7 +647,7 @@ void tint_session_load()
         sscanf((*p++), "session[%d][%d][%d].desktop=%d", &i, &j, &k, &desktop);
         //sscanf((*p++), "session[%d][%d][%d].title=%255[^\n]", &i, &j, &k, title);
         //sscanf((*p++), "session[%d][%d][%d].application=%255[^\n]", &i, &j, &k, application);
-        p++;
+        //p++;
 
         tint_session[i][j][k].win = win;
         tint_session[i][j][k].desktop = desktop;
