@@ -529,6 +529,7 @@ bool tint_session_update()
 {
     time_t now = time(NULL);
     char *now_ctime = ctime(&now);
+    now_ctime[strlen(now_ctime) - 1] = '\0';
     printf("[my-tint2] (%s) tint_session_update\n", now_ctime); ///
     bool flag_changed = false;
     for (int i = 0; i < num_panels; i++) {
@@ -589,6 +590,7 @@ void tint_session_save()
 {
     time_t now = time(NULL);
     char *now_ctime = ctime(&now);
+    now_ctime[strlen(now_ctime) - 1] = '\0';
     printf("[my-tint2] (%s) tint_session_save\n", now_ctime); ///
     gchar *session_file = g_build_filename(g_get_home_dir(), "tint2.session", NULL);
 
@@ -623,6 +625,7 @@ void tint_session_load()
 {
     time_t now = time(NULL);
     char *now_ctime = ctime(&now);
+    now_ctime[strlen(now_ctime) - 1] = '\0';
     printf("[my-tint2] (%s) tint_session_load\n", now_ctime); ///
     gchar *session_file = g_build_filename(g_get_home_dir(), "tint2.session", NULL);
 
@@ -674,6 +677,7 @@ void taskbar_refresh_tasklist()
     Window *sorted = (Window *)calloc(num_results, sizeof(Window));
     memcpy(sorted, win, num_results * sizeof(Window));
     if (taskbar_task_orderings) {
+        printf("[my-tint2] \t taskbar_task_orderings\n"); ///
         sort_win_list(sorted, num_results);
         taskbar_clear_orderings();
     }
@@ -686,7 +690,12 @@ void taskbar_refresh_tasklist()
         if (get_task(sorted[i])) num_added++;
     // zero means tint2 has just (re)started
     if (num_added == 0) {
-        fprintf(stderr, "###### adding %d windows\n", num_results); ///
+        time_t now = time(NULL);
+        char *now_ctime = ctime(&now);
+        now_ctime[strlen(now_ctime) - 1] = '\0';
+        printf("[my-tint2] (%s) STARTED\n", now_ctime); ///
+
+        printf("[my-tint2] \t adding %d windows\n", num_results); ///
 
         ////
 
@@ -704,20 +713,21 @@ void taskbar_refresh_tasklist()
                             sorted[m++] = tint_session[i][j][k].win;
                         else {
                             // this should not happen
-                            fprintf(stderr, "###### failed to add win 0x%lx\n", tint_session[i][j][k].win);
-                            fprintf(stderr, "###### more recorded windows than existing windows (%d)\n",
+                            fprintf(stderr, "[my-tint2] \t failed to add win 0x%lx\n",
+                                    tint_session[i][j][k].win);
+                            fprintf(stderr, "[my-tint2] \t more recorded windows than existing windows (%d)\n",
                                     num_results);
                         }
                     } else {
                         // this can happen
-                        fprintf(stderr, "###### win 0x%lx recorded but not existing\n",
+                        fprintf(stderr, "[my-tint2] \t win 0x%lx recorded but not existing\n",
                                 tint_session[i][j][k].win);
                     }
                 }
             }
         }
         if (m < num_results) {
-            fprintf(stderr, "###### %d recorded windows, but %d existing windows\n", m, num_results);
+            fprintf(stderr, "[my-tint2] \t %d recorded windows, but %d existing windows\n", m, num_results);
             // add the rest of existing windows
             for (int n = 0; n < num_results; n++) {
                 bool flag_found = false;
@@ -726,7 +736,7 @@ void taskbar_refresh_tasklist()
                         flag_found = true;
                 if (!flag_found) sorted[m++] = win[n];
             }
-            fprintf(stderr, "###### %d windows added in total\n", m);
+            printf("[my-tint2] \t %d windows added in total\n", m);
         }
     }
 
