@@ -661,6 +661,7 @@ void tint_session_load()
         fprintf(stderr, "[my-tint2] \t loaded session[%d][%d][%d], win=0x%lx, desktop=%d\n",
                 i, j, k, win, desktop);
     }
+    fprintf(stderr, "[my-tint2] \t finished loading session\n");
 
     g_free(session_file);
     g_string_free(text, TRUE);
