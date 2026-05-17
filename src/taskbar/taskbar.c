@@ -505,8 +505,8 @@ void sort_win_list(Window *windows, int count)
 
 
 #define MAX_MONITOR_NUM 4
-#define MAX_WORKSPACE_NUM 4
-#define MAX_TASK_NUM 64
+#define MAX_WORKSPACE_NUM 8
+#define MAX_TASK_NUM 100
 
 typedef struct {
     Window win;  // long unsigned (32-bit)
